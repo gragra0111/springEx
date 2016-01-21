@@ -1,16 +1,13 @@
 package springbook.user.service;
 
-import java.sql.Connection;
 import java.util.List;
 
-import javax.sql.DataSource;
-
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -20,10 +17,15 @@ public class UserService {
 	public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
 	public static final int MIN_RECOMMEND_FOR_GOLD = 30;
 	private PlatformTransactionManager transactionManager;
+	private MailSender mailSender;
 	UserDao userDao;
 	
 	public void setTransactionManager(PlatformTransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
+	}
+
+	public void setMailSender(MailSender mailSender) {
+		this.mailSender = mailSender;
 	}
 	
 	public void setUserDao(UserDao userDao) {
@@ -31,11 +33,7 @@ public class UserService {
 	}
 	
 	public void upgradeLevels() throws Exception {
-		//PlatformTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);	//JDBC 트랜잭션 추상 오브젝트 생성
 		TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());	//트랜잭션 시작
-		//TransactionSynchronizationManager.initSynchronization();	//트랜잭션 동기화 관리자를 이용해 동기화 작업을 초기화한다.
-		//Connection c = DataSourceUtils.getConnection(dataSource);	//DB커넥션을 생성하고 (DB 커넥션 생성과 동기화를 함께 해주는 유틸리티 메소드)
-		//c.setAutoCommit(false);										//트랜잭션을 시작한다. 이후의 DAO 작업은 모두 여기서 시작한 트랜잭션 안에서 진행된다.
 		
 		try {
 			List<User> users = userDao.getAll();
@@ -48,13 +46,10 @@ public class UserService {
 		} catch(Exception e) {
 			this.transactionManager.rollback(status);	//예외가 발생하면 롤백한다.
 			throw e;
-		} /*finally {
-			DataSourceUtils.releaseConnection(c, dataSource);	//스프링 유틸리티 메소드를 이용해 DB 커넥션을 안전하게 닫는다.
-			TransactionSynchronizationManager.unbindResource(this.dataSource);	//동기화 작업 종료
-			TransactionSynchronizationManager.clearSynchronization();			//동기화 작업 정리
-		}*/
+		}
 	}
 
+	//upgrade 기준 확인 메소드
 	private boolean canUpgradeLevel(User user) {
 		Level currentLevel = user.getLevel();
 		switch(currentLevel) {
@@ -65,9 +60,44 @@ public class UserService {
 		}
 	}
 
+	//upgrade 실행 메소드
 	protected void upgradeLevel(User user) {
 		user.upgradeLevel();
 		userDao.update(user);
+		sendUpgradeEMail(user);
+		
+	}
+	
+	private void sendUpgradeEMail(User user) {
+		/*Properties props = new Properties();
+		props.put("mail.smtp.host", "mail.ksug.org");
+		Session s = Session.getInstance(props, null);
+		
+		MimeMessage message = new MimeMessage(s);
+		try {
+			message.setFrom(new InternetAddress("useradmin@ksug.org"));
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(user.getEmail()));
+			message.setSubject("Upgrade 안내");
+			message.setText("사용자님의 등급이 " + user.getLevel().name() + "로 업그레이드되었습니다.");
+			
+			Transport.send(message);
+		} catch (AddressException e) {
+			throw new RuntimeException(e);
+		} catch (MessagingException e) {
+			throw new RuntimeException(e);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}*/
+		/*JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+		mailSender.setHost("mail.server.com");*/
+		
+		SimpleMailMessage mailMessage = new SimpleMailMessage();
+		mailMessage.setTo(user.getEmail());
+		mailMessage.setFrom("useradmin@ksug.org");
+		mailMessage.setSubject("Upgrade 안내");
+		mailMessage.setText("사용자님의 등급이 " + user.getLevel().name() + "로 업그레이드되었습니다.");
+		
+		this.mailSender.send(mailMessage);
 	}
 	
 	public void add(User user) {

@@ -5,6 +5,7 @@ import static springbook.user.service.UserService.MIN_RECOMMEND_FOR_GOLD;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,6 +16,10 @@ import org.junit.Test;
 import org.junit.internal.runners.statements.Fail;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -32,6 +37,8 @@ public class UserServiceTest {
 	UserDao userDao;
 	@Autowired
 	PlatformTransactionManager transactionManager;
+	@Autowired
+	MailSender mailSender;
 	List<User> users;
 	
 	@Before
@@ -46,11 +53,15 @@ public class UserServiceTest {
 	}
 	
 	@Test
+	@DirtiesContext	//컨텍스트의 DI 설정을 변경하는 테스트라는 것을 알려준다.
 	public void upgradeLevels() {
 		userDao.deleteAll();
 		for(User user : users) {
 			userDao.add(user);
 		}
+		
+		MockMailSender mockMailSender = new MockMailSender();
+		userService.setMailSender(mockMailSender);
 		
 		try {
 			userService.upgradeLevels();
@@ -63,6 +74,11 @@ public class UserServiceTest {
 		checkLevelUpgraded(users.get(2), false);
 		checkLevelUpgraded(users.get(3), true);
 		checkLevelUpgraded(users.get(4), false);
+		
+		List<String> request = mockMailSender.getRequests();
+		assertThat(request.size(), is(2));
+		assertThat(request.get(0), is(users.get(1).getEmail()));
+		assertThat(request.get(1), is(users.get(3).getEmail()));
 	}
 
 	@Test
@@ -101,7 +117,6 @@ public class UserServiceTest {
 		}
 		
 		protected void upgradeLevel(User user) {
-			System.out.println(user.getId() + " : " + id);
 			if(user.getId().equals(this.id)) throw new TestUserServiceException();
 			super.upgradeLevel(user);
 		}
@@ -114,6 +129,7 @@ public class UserServiceTest {
 		UserService testUserService = new TestUserService(users.get(3).getId());	//예외를 발생시킬 네 번째 사용자의 id를 넣어서 테스트용 UserService 대역 오브젝트를 생성한다.
 		testUserService.setUserDao(userDao);	//userDao를 수동 DI 해준다.
 		testUserService.setTransactionManager(transactionManager);
+		testUserService.setMailSender(mailSender);
 		userDao.deleteAll();
 		for(User user : users) {
 			userDao.add(user);
@@ -127,5 +143,26 @@ public class UserServiceTest {
 		}
 		checkLevelUpgraded(users.get(1), false);	//예외가 발생하기 전에 레벨 변경이 있었던 사용자의 레벨이 처음 상태로 바뀌었나 확인
 	}
+	
+	//목 오브젝트로 만든 메일 전송 확인용 클래스
+	static class MockMailSender implements MailSender {
+		private List<String> requests = new ArrayList<String>();
+		
+		public List<String> getRequests() {
+			return requests;
+		}
+		
+		@Override
+		public void send(SimpleMailMessage mailMessage) throws MailException {
+			requests.add(mailMessage.getTo()[0]);
+		}
+
+		@Override
+		public void send(SimpleMailMessage[] mailMessage) throws MailException {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+	
 
 }
