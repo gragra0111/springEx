@@ -7,6 +7,7 @@ public class User {
 	Level lev;
 	int login;
 	int recommend;
+	private String email;
 	
 	public User() {
 		// TODO Auto-generated constructor stub
@@ -18,13 +19,14 @@ public class User {
 		this.password = password;
 	}
 	
-	public User(String id, String name, String password, Level lev, int login, int recommend) {
+	public User(String id, String name, String password, Level lev, int login, int recommend, String email) {
 		this.id = id;
 		this.name = name;
 		this.password = password;
 		this.lev = lev;
 		this.login = login;
 		this.recommend = recommend;
+		this.email = email;
 	}
 
 	public String getId() {
@@ -70,6 +72,15 @@ public class User {
 		this.recommend = recommend;
 	}
 	
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
+	//다음 레벨을 반환해주는 메소드
 	public void upgradeLevel() {
 		Level nextLevel = this.lev.nextLevel();
 		if(nextLevel == null) {
@@ -78,4 +89,5 @@ public class User {
 			this.lev = nextLevel;
 		}
 	}
+
 }

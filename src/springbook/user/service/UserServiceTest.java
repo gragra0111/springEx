@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -30,21 +31,20 @@ public class UserServiceTest {
 	@Autowired
 	UserDao userDao;
 	@Autowired
-	DataSource dataSource;
+	PlatformTransactionManager transactionManager;
 	List<User> users;
 	
 	@Before
 	public void setUp() {
 		users = Arrays.asList(
-				new User("1PARK","박영진","1",Level.BASIC,MIN_LOGCOUNT_FOR_SILVER-1,0),
-				new User("2GOO","구본식","2",Level.BASIC,MIN_LOGCOUNT_FOR_SILVER,0),
-				new User("3JUNG","정광운","3",Level.SILVER,60,MIN_RECOMMEND_FOR_GOLD-1),
-				new User("4GANG","강유성","4",Level.SILVER,60,MIN_RECOMMEND_FOR_GOLD),
-				new User("5YOON","윤성진","5",Level.GOLD,100,Integer.MAX_VALUE)
+				new User("1PARK","박영진","1",Level.BASIC,MIN_LOGCOUNT_FOR_SILVER-1,0, "park@naver.com"),
+				new User("2GOO","구본식","2",Level.BASIC,MIN_LOGCOUNT_FOR_SILVER,0, "goo@naver.com"),
+				new User("3JUNG","정광운","3",Level.SILVER,60,MIN_RECOMMEND_FOR_GOLD-1, "jung@naver.com"),
+				new User("4GANG","강유성","4",Level.SILVER,60,MIN_RECOMMEND_FOR_GOLD, "gang@naver.com"),
+				new User("5YOON","윤성진","5",Level.GOLD,100,Integer.MAX_VALUE, "yoon@naver.com")
 		);
 	}
 	
-/*
 	@Test
 	public void upgradeLevels() {
 		userDao.deleteAll();
@@ -52,7 +52,11 @@ public class UserServiceTest {
 			userDao.add(user);
 		}
 		
-		userService.upgradeLevels();
+		try {
+			userService.upgradeLevels();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		checkLevelUpgraded(users.get(0), false);
 		checkLevelUpgraded(users.get(1), true);
@@ -60,8 +64,7 @@ public class UserServiceTest {
 		checkLevelUpgraded(users.get(3), true);
 		checkLevelUpgraded(users.get(4), false);
 	}
-*/
-/*
+
 	@Test
 	public void add() {
 		userDao.deleteAll();
@@ -79,7 +82,7 @@ public class UserServiceTest {
 		assertThat(userWithLevelRead.getLevel(), is(userWithLevel.getLevel()));
 		assertThat(userWithoutLevelRead.getLevel(), is(Level.BASIC));
 	}
-*/	
+	
 	private void checkLevelUpgraded(User user, Boolean upgraded) {
 		User userUpdate = userDao.get(user.getId());
 		if(upgraded) {
@@ -104,14 +107,13 @@ public class UserServiceTest {
 		}
 	}
 	
-	static class TestUserServiceException extends RuntimeException {	
-	}
+	static class TestUserServiceException extends RuntimeException {}
 	
 	@Test
 	public void upgradeAllOrNothing() throws Exception {
 		UserService testUserService = new TestUserService(users.get(3).getId());	//예외를 발생시킬 네 번째 사용자의 id를 넣어서 테스트용 UserService 대역 오브젝트를 생성한다.
-		testUserService.setUserDao(this.userDao);	//userDao를 수동 DI 해준다.
-		testUserService.setDataSource(this.dataSource);
+		testUserService.setUserDao(userDao);	//userDao를 수동 DI 해준다.
+		testUserService.setTransactionManager(transactionManager);
 		userDao.deleteAll();
 		for(User user : users) {
 			userDao.add(user);
