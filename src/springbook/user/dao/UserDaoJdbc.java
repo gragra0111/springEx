@@ -15,6 +15,10 @@ import springbook.user.domain.User;
 public class UserDaoJdbc implements UserDao {
 	private JdbcTemplate jdbcTemplate;
 	
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+	
 	private RowMapper<User> userMapper = 
 		new RowMapper<User>() {
 			public User mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -29,10 +33,6 @@ public class UserDaoJdbc implements UserDao {
 				return user;
 			}
 	};
-	
-	public void setDataSource(DataSource dataSource) {
-		this.jdbcTemplate = new JdbcTemplate(dataSource);
-	}
 	
 	public void add(User user) {
 		this.jdbcTemplate.update("insert into users(id, name, password, lev, login, recommend, email) values(?,?,?,?,?,?,?)", user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail());
