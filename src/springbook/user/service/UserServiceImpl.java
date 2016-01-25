@@ -14,7 +14,7 @@ public class UserServiceImpl implements UserService {
 	public static final int MIN_RECOMMEND_FOR_GOLD = 30;
 	
 	private MailSender mailSender;
-	UserDao userDao;
+	private UserDao userDao;
 
 	public void setMailSender(MailSender mailSender) {
 		this.mailSender = mailSender;
