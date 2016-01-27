@@ -34,5 +34,4 @@ public class UserServiceTx implements UserService {
 			throw e;
 		}
 	}
-
 }
