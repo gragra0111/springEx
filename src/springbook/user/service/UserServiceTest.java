@@ -6,7 +6,6 @@ import static org.junit.Assert.fail;
 import static springbook.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static springbook.user.service.UserServiceImpl.MIN_RECOMMEND_FOR_GOLD;
 
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +18,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -36,7 +34,7 @@ public class UserServiceTest {
 	@Autowired
 	UserService userService;
 	@Autowired
-	UserServiceImpl userServiceImpl;
+	UserService testUserService;
 	@Autowired
 	UserDao userDao;
 	@Autowired
@@ -111,12 +109,8 @@ public class UserServiceTest {
 	}
 	
 	//UserService의 테스트용 대역 클래스
-	static class TestUserService extends UserServiceImpl {
-		private String id;
-		
-		private TestUserService(String id) {
-			this.id = id;
-		}
+	static class TestUserServiceImpl extends UserServiceImpl {
+		private String id = "4GANG";
 		
 		protected void upgradeLevel(User user) {
 			if(user.getId().equals(this.id)) throw new TestUserServiceException();
@@ -127,29 +121,14 @@ public class UserServiceTest {
 	static class TestUserServiceException extends RuntimeException {}
 	
 	@Test
-	@DirtiesContext
-	public void upgradeAllOrNothing() throws Exception {
-		TestUserService testUserService = new TestUserService(users.get(3).getId());	//예외를 발생시킬 네 번째 사용자의 id를 넣어서 테스트용 UserService 대역 오브젝트를 생성한다.
-		testUserService.setUserDao(userDao);	//userDao를 수동 DI 해준다.
-		testUserService.setMailSender(mailSender);
-		
-		/*TransactionHandler txHandler = new TransactionHandler();
-		txHandler.setTarget(testUserService);
-		txHandler.setTransactionManager(transactionManager);
-		txHandler.setPattern("upgradeLevels");*/
-		TxProxyFactoryBean txProxyFactoryBean = context.getBean("&userService", TxProxyFactoryBean.class);
-		txProxyFactoryBean.setTarget(testUserService);
-		
-		//UserService txUserService = (UserService)Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] {UserService.class}, txHandler);
-		UserService txUserService = (UserService) txProxyFactoryBean.getObject();
-		
+	public void upgradeAllOrNothing() {
 		userDao.deleteAll();
 		for(User user : users) {
 			userDao.add(user);
 		}
 		
 		try {
-			txUserService.upgradeLevels();
+			this.testUserService.upgradeLevels();
 			fail("TestUserServiceException expected");	//TestUserService는 업그레이드 작업 중에 예외가 발생해야 한다. 정상 종료라면 문제가 있으니 실패
 		} catch(TestUserServiceException e) {	//TestUserService가 던져주는 예외를 잡아서 계속 진행되도록 한다. 그 외의 예외라면 테스트 실패
 			
