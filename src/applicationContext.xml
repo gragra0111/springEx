@@ -20,23 +20,12 @@
 				
     <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
     	
-	<!-- <bean id="connectionMaker" class="springbook.user.dao.NConnectionMaker" /> -->
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
 		<property name="driverClass" value="oracle.jdbc.driver.OracleDriver" />
 		<property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl" />
 		<property name="username" value="spring" />
 		<property name="password" value="spring" />
 	</bean>
-	<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
-		<property name="driverClass" value="com.sybase.jdbc4.jdbc.SybDriver" />
-		<property name="url" value="jdbc:sybase:Tds:192.168.100.22:6600/jserp" />
-		<property name="username" value="sa" />
-		<property name="password" value="" />
-	</bean> -->
-	
-	<!-- <bean id="jdbcContext" class="springbook.user.dao.JdbcContext">
-		<property name="dataSource" ref="dataSource" />
-	</bean> -->
 	
 	<bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
 		<property name="dataSource" ref="dataSource" />
@@ -49,27 +38,6 @@
 	
 	<bean id="testUserService" class="springbook.user.service.UserServiceTest$TestUserServiceImpl" parent="userService" />
 	    
-	<!-- <bean id="userService" class="springbook.user.service.UserServiceTx">
-		<property name="transactionManager" ref="transactionManager" />
-		<property name="userService" ref="userServiceImpl" />
-	</bean> -->
-	
-	<!-- <bean id="userService" class="springbook.user.service.TxProxyFactoryBean">
-		<property name="target" ref="userServiceImpl" />
-	    <property name="transactionManager" ref="transactionManager" />
-		<property name="pattern" value="upgradeLevels" />
-		<property name="serviceInterface" value="springbook.user.service.UserService" />
-	</bean> -->
-	
-	<!-- <bean id="userService" class="org.springframework.aop.framework.ProxyFactoryBean">
-	    <property name="target" ref="userServiceImpl" />
-	    <property name="interceptorNames">
-	        <list>
-	            <value>transactionAdvisor</value>
-	        </list>
-	    </property>
-	</bean> -->
-	
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 	    <property name="dataSource" ref="dataSource" />
 	</bean>
@@ -78,13 +46,8 @@
 	    <property name="transactionManager" ref="transactionManager" />
 	</bean>
 	
-	<!-- <bean id="transactionPointcut" class="org.springframework.aop.support.NameMatchMethodPointcut">
-	    <property name="mappedName" value="upgrade*" />
-	</bean> -->
-	
-	<bean id="transactionPointcut" class="springbook.learningtest.jdk.proxy.NameMatchClassMethodPointcut">
-	    <property name="mappedClassName" value="*ServiceImpl" />	<!-- 클래스 이름 패턴 -->
-	    <property name="mappedName" value="upgrade*" />		<!-- 메소드 이름 패턴 -->
+	<bean id="transactionPointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
+	    <property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))" />
 	</bean>
 	
 	<bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
@@ -92,8 +55,5 @@
 	    <property name="pointcut" ref="transactionPointcut" />
 	</bean>
 	
-	<!-- <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSender"> 
-	    <property name="host" ref="mail.server.com" />
-	</bean>-->
 	<bean id="mailSender" class="springbook.user.service.DummyMailSender" />
 </beans>
