@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -109,16 +110,28 @@ public class UserServiceTest {
 	}
 	
 	//UserService의 테스트용 대역 클래스
-	static class TestUserServiceImpl extends UserServiceImpl {
+	static class TestUserService extends UserServiceImpl {
 		private String id = "4GANG";
 		
 		protected void upgradeLevel(User user) {
 			if(user.getId().equals(this.id)) throw new TestUserServiceException();
 			super.upgradeLevel(user);
 		}
+		
+		public List<User> getAll() {
+			for(User user : super.getAll()) {
+				super.update(user);
+			}
+			return null;
+		}
 	}
 	
 	static class TestUserServiceException extends RuntimeException {}
+	
+	@Test/*(expected=TransientDataAccessResourceException.class)*/
+	public void readOnlyTransactionAttribute() {
+		testUserService.getAll();
+	}
 	
 	@Test
 	public void upgradeAllOrNothing() {
@@ -131,7 +144,6 @@ public class UserServiceTest {
 			this.testUserService.upgradeLevels();
 			fail("TestUserServiceException expected");	//TestUserService는 업그레이드 작업 중에 예외가 발생해야 한다. 정상 종료라면 문제가 있으니 실패
 		} catch(TestUserServiceException e) {	//TestUserService가 던져주는 예외를 잡아서 계속 진행되도록 한다. 그 외의 예외라면 테스트 실패
-			
 		}
 		checkLevelUpgraded(users.get(1), false);	//예외가 발생하기 전에 레벨 변경이 있었던 사용자의 레벨이 처음 상태로 바뀌었나 확인
 	}
@@ -185,4 +197,13 @@ public class UserServiceTest {
 		@Override
 		public int getCount() { throw new UnsupportedOperationException(); }
 	}
+	
+	@Test
+	public void transactionSync() {
+		userService.deleteAll();
+		
+		userService.add(users.get(0));
+		userService.add(users.get(1));
+	}
+	
 }

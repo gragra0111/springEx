@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.transaction.annotation.Transactional;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;
@@ -67,5 +68,25 @@ public class UserServiceImpl implements UserService {
 			user.setLevel(Level.BASIC);
 		}
 		userDao.add(user);
+	}
+
+	@Override
+	public void deleteAll() {
+		userDao.deleteAll();
+	}
+	
+	@Override
+	public User get(String id) {
+		return userDao.get(id);
+	}
+
+	@Override
+	public List<User> getAll() {
+		return userDao.getAll();
+	}
+
+	@Override
+	public void update(User user) {
+		userDao.update(user);
 	}
 }

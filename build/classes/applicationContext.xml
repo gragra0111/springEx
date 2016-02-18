@@ -6,20 +6,21 @@
     xmlns:p="http://www.springframework.org/schema/p"
     xmlns:util="http://www.springframework.org/schema/util"
     xmlns:task="http://www.springframework.org/schema/task"
+    xmlns:tx="http://www.springframework.org/schema/tx"
     xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-            http://www.springframework.org/schema/aop 
+            http://www.springframework.org/schema/aop
             http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
-            http://www.springframework.org/schema/context 
+            http://www.springframework.org/schema/context
             http://www.springframework.org/schema/context/spring-context-3.1.xsd
-            http://www.springframework.org/schema/util 
+            http://www.springframework.org/schema/util
             http://www.springframework.org/schema/util/spring-util-3.1.xsd
-            http://www.springframework.org/schema/task 
-            http://www.springframework.org/schema/task/spring-task-3.1.xsd">
+            http://www.springframework.org/schema/task
+            http://www.springframework.org/schema/task/spring-task-3.1.xsd
+            http://www.springframework.org/schema/tx
+            http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
-				
-    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
-    	
+	
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
 		<property name="driverClass" value="oracle.jdbc.driver.OracleDriver" />
 		<property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl" />
@@ -36,24 +37,62 @@
 		<property name="mailSender" ref="mailSender" />
 	</bean>
 	
-	<bean id="testUserService" class="springbook.user.service.UserServiceTest$TestUserServiceImpl" parent="userService" />
+	<bean id="testUserService" class="springbook.user.service.UserServiceTest$TestUserService" parent="userService" />
 	    
+	<bean id="mailSender" class="springbook.user.service.DummyMailSender" />
+	
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 	    <property name="dataSource" ref="dataSource" />
 	</bean>
 	
-	<bean id="transactionAdvice" class="springbook.learningtest.jdk.proxy.TransactionAdvice">
-	    <property name="transactionManager" ref="transactionManager" />
-	</bean>
+	<!-- 자동 프록시 생성기 -->			
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
 	
-	<bean id="transactionPointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
+    <tx:annotation-driven/>
+    
+    <!-- 포인트컷 -->
+	<!-- <bean id="transactionPointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
 	    <property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))" />
-	</bean>
+	</bean> -->
 	
-	<bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+	<!-- 어드바이저 -->
+	<!-- <bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
 	    <property name="advice" ref="transactionAdvice" />
 	    <property name="pointcut" ref="transactionPointcut" />
-	</bean>
+	</bean> -->
 	
-	<bean id="mailSender" class="springbook.user.service.DummyMailSender" />
+	<aop:config>
+	    <aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
+	</aop:config>
+	
+    <!-- 어드바이스 -->
+	<!-- <bean id="transactionAdvice" class="springbook.learningtest.jdk.proxy.TransactionAdvice">
+	    <property name="transactionManager" ref="transactionManager" />
+	</bean> -->
+	
+	<!-- <tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+	    <tx:attributes>
+	        <tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
+	        <tx:method name="upgrade*" propagation="REQUIRES_NEW" isolation="SERIALIZABLE" />
+	        <tx:method name="*" propagation="REQUIRED" />
+	    </tx:attributes>
+	</tx:advice> -->
+	
+	<!-- <bean id="transactionAdvice" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+	    <property name="transactionManager" ref="transactionManager" />
+	    <property name="transactionAttributes">
+	        <props>
+	            <prop key="get*">PROPAGATION_REQUIRED, readOnly</prop>
+	            <prop key="*">PROPAGATION_REQUIRED</prop>
+	        </props>
+	    </property>
+	</bean> -->
+	
+	<tx:advice id="transactionAdvice">
+	    <tx:attributes>
+	        <tx:method name="get*" read-only="true" />
+	        <tx:method name="*" />
+	    </tx:attributes>
+	</tx:advice>
+	
 </beans>
