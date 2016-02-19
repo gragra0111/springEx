@@ -30,7 +30,23 @@
 	
 	<bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
 		<property name="dataSource" ref="dataSource" />
+		<property name="sqlService" ref="sqlService" />
 	</bean>
+	
+	<bean id="sqlService" class="springbook.user.sqlservice.XmlSqlService"></bean>
+	
+	<!-- <bean id="sqlService" class="springbook.user.sqlservice.SimpleSqlService">
+		<property name="sqlMap">
+		    <map>
+		        <entry key="userAdd" value="insert into users(id, name, password, lev, login, recommend, email) values(?,?,?,?,?,?,?)" />
+		        <entry key="userGet" value="select * from users where id = ?" />
+		        <entry key="userGetAll" value="select * from users order by id" />
+		        <entry key="userDeleteAll" value="delete from users" />
+		        <entry key="userGetCount" value="select count(*) from users" />
+		        <entry key="userUpdate" value="update users set name=?, password=?, lev=?, login=?, recommend=?, email=? where id=?" />
+		    </map>
+		</property>
+	</bean> -->
 	
 	<bean id="userService" class="springbook.user.service.UserServiceImpl">
 		<property name="userDao" ref="userDao" />
@@ -49,44 +65,10 @@
     <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
 	
     <tx:annotation-driven/>
-    
-    <!-- 포인트컷 -->
-	<!-- <bean id="transactionPointcut" class="org.springframework.aop.aspectj.AspectJExpressionPointcut">
-	    <property name="expression" value="execution(* *..*ServiceImpl.upgrade*(..))" />
-	</bean> -->
-	
-	<!-- 어드바이저 -->
-	<!-- <bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
-	    <property name="advice" ref="transactionAdvice" />
-	    <property name="pointcut" ref="transactionPointcut" />
-	</bean> -->
-	
+
 	<aop:config>
 	    <aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
 	</aop:config>
-	
-    <!-- 어드바이스 -->
-	<!-- <bean id="transactionAdvice" class="springbook.learningtest.jdk.proxy.TransactionAdvice">
-	    <property name="transactionManager" ref="transactionManager" />
-	</bean> -->
-	
-	<!-- <tx:advice id="transactionAdvice" transaction-manager="transactionManager">
-	    <tx:attributes>
-	        <tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
-	        <tx:method name="upgrade*" propagation="REQUIRES_NEW" isolation="SERIALIZABLE" />
-	        <tx:method name="*" propagation="REQUIRED" />
-	    </tx:attributes>
-	</tx:advice> -->
-	
-	<!-- <bean id="transactionAdvice" class="org.springframework.transaction.interceptor.TransactionInterceptor">
-	    <property name="transactionManager" ref="transactionManager" />
-	    <property name="transactionAttributes">
-	        <props>
-	            <prop key="get*">PROPAGATION_REQUIRED, readOnly</prop>
-	            <prop key="*">PROPAGATION_REQUIRED</prop>
-	        </props>
-	    </property>
-	</bean> -->
 	
 	<tx:advice id="transactionAdvice">
 	    <tx:attributes>
