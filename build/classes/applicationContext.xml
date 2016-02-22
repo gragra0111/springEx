@@ -33,20 +33,24 @@
 		<property name="sqlService" ref="sqlService" />
 	</bean>
 	
-	<bean id="sqlService" class="springbook.user.sqlservice.XmlSqlService"></bean>
-	
-	<!-- <bean id="sqlService" class="springbook.user.sqlservice.SimpleSqlService">
-		<property name="sqlMap">
-		    <map>
-		        <entry key="userAdd" value="insert into users(id, name, password, lev, login, recommend, email) values(?,?,?,?,?,?,?)" />
-		        <entry key="userGet" value="select * from users where id = ?" />
-		        <entry key="userGetAll" value="select * from users order by id" />
-		        <entry key="userDeleteAll" value="delete from users" />
-		        <entry key="userGetCount" value="select count(*) from users" />
-		        <entry key="userUpdate" value="update users set name=?, password=?, lev=?, login=?, recommend=?, email=? where id=?" />
-		    </map>
-		</property>
+	<!-- <bean id="sqlService" class="springbook.user.sqlservice.XmlSqlService">
+	 	<property name="sqlReader" ref="sqlService" />
+	 	<property name="sqlRegistry" ref="sqlService" />
+	 	<property name="sqlmapFile" value="sqlmap.xml" />
 	</bean> -->
+	
+	<!-- <bean id="sqlService" class="springbook.user.sqlservice.BaseSqlService">
+	 	<property name="sqlReader" ref="sqlReader" />
+	 	<property name="sqlRegistry" ref="sqlRegistry" />
+	</bean>
+	
+	<bean id="sqlReader" class="springbook.user.sqlservice.JaxbXmlSqlReader">
+	    <property name="sqlmapFile" value="sqlmap.xml" />
+	</bean>
+	
+	<bean id="sqlRegistry" class="springbook.user.sqlservice.HashMapSqlRegistry" /> -->
+	
+	<bean id="sqlService" class="springbook.user.sqlservice.DefaultSqlService" />
 	
 	<bean id="userService" class="springbook.user.service.UserServiceImpl">
 		<property name="userDao" ref="userDao" />
@@ -76,5 +80,9 @@
 	        <tx:method name="*" />
 	    </tx:attributes>
 	</tx:advice>
+	
+	<context:annotation-config />
+	
+	
 	
 </beans>

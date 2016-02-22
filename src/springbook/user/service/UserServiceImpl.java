@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.transaction.annotation.Transactional;
 
 import springbook.user.dao.UserDao;
 import springbook.user.domain.Level;

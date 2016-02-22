@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
@@ -23,8 +22,6 @@ import springbook.user.domain.User;
 @ContextConfiguration(locations="/applicationContext.xml")
 public class UserDaoTest {
 	@Autowired
-	//private ApplicationContext context;
-	
 	private UserDao dao;
 	private User user1;
 	private User user2;
@@ -32,7 +29,6 @@ public class UserDaoTest {
 	
 	@Before
 	public void setUp() {
-		//this.dao = context.getBean("userDao", UserDao.class);
 		this.user1 = new User("BAE", "배정혁", "1", Level.BASIC, 1, 0, "bae@naver.com");
 		this.user2 = new User("PARK", "박영진", "2", Level.SILVER, 55, 10, "park@naver.com");
 		this.user3 = new User("YOON", "윤용주", "3", Level.GOLD, 100, 40, "yoon@naver.com");
@@ -50,19 +46,6 @@ public class UserDaoTest {
 		dao.add(user2);
 		User userget2 = dao.get(user2.getId());
 		checkSameUser(userget2, user2);
-		
-		/*User user = new User();
-		user.setId("gragra0111");
-		user.setName("박영진");
-		user.setPassword("1234");
-		dao.add(user);
-		System.out.println(user.getId() + "등록성공!!");
-		assertThat(dao.getCount(), is(1));
-		
-		User user2 = dao.get(user.getId());
-		assertThat(user2.getName(), is(user.getName()));
-		assertThat(user2.getPassword(), is(user.getPassword()));*/
-		
 	}
 	
 	@Test
