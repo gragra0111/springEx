@@ -6,21 +6,22 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
 import springbook.user.sqlservice.SqlService;
 
+@Repository
 public class UserDaoJdbc implements UserDao {
 	private JdbcTemplate jdbcTemplate;
+	@Autowired
 	private SqlService sqlService;
 	
-	public void setSqlService(SqlService sqlService) {
-		this.sqlService = sqlService;
-	}
-	
+	@Autowired
 	public void setDataSource(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}

@@ -17,9 +17,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import springbook.user.domain.Level;
 import springbook.user.domain.User;
+import springbook.user.service.AppContext;
+import springbook.user.service.TestAppContext;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations="/applicationContext.xml")
+@ContextConfiguration(classes={TestAppContext.class, AppContext.class})
 public class UserDaoTest {
 	@Autowired
 	private UserDao dao;

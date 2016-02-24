@@ -15,7 +15,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -28,7 +27,7 @@ import springbook.user.domain.Level;
 import springbook.user.domain.User;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations="/applicationContext.xml")
+@ContextConfiguration(classes={TestAppContext.class, AppContext.class})
 public class UserServiceTest {
 	@Autowired
 	ApplicationContext context;
@@ -60,10 +59,10 @@ public class UserServiceTest {
 		UserServiceImpl userServiceImpl = new UserServiceImpl();
 		
 		MockUserDao mockUserDao = new MockUserDao(this.users);
-		userServiceImpl.setUserDao(mockUserDao);
+		//userServiceImpl.setUserDao(mockUserDao);
 		
 		MockMailSender mockMailSender = new MockMailSender();
-		userServiceImpl.setMailSender(mockMailSender);
+		//userServiceImpl.setMailSender(mockMailSender);
 		
 		userServiceImpl.upgradeLevels();
 		
@@ -110,7 +109,7 @@ public class UserServiceTest {
 	}
 	
 	//UserService의 테스트용 대역 클래스
-	static class TestUserService extends UserServiceImpl {
+	public static class TestUserService extends UserServiceImpl {
 		private String id = "4GANG";
 		
 		protected void upgradeLevel(User user) {
@@ -126,6 +125,7 @@ public class UserServiceTest {
 		}
 	}
 	
+	@SuppressWarnings("serial")
 	static class TestUserServiceException extends RuntimeException {}
 	
 	@Test/*(expected=TransientDataAccessResourceException.class)*/
